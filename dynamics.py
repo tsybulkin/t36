@@ -5,7 +5,7 @@ The diff equation that governs the robot motion:
 
 	1)  K*dx + (mb + mw + Iw/R**2)*d2x - U*f/R = 0
 
-	2)  Ib*d2a + K*R*dx - U*f - g*h*mb*a = 0
+	2)  Ib*d2a - K*R*dx + U*f - g*h*mb*a = 0
 
 where:
 	Iw, Ib - inertia moments of robot body and wheels
@@ -35,12 +35,12 @@ K = 5.  # can be estimated from maximal motor speed
 
 
 def run(time_out=1.):
-	tau = 0.01 
+	tau = 0.01
 
 	## initial conditions
 	x = 0.
 	dx = 1.0
-	a = 0.04
+	a = -0.0525
 	da = 0.
 
 	t = 0.
@@ -51,26 +51,23 @@ def run(time_out=1.):
 		log.append((t,dx,a,u))
 		t += tau
 
-		u = control.control(x,dx,a,da)
+		u = control.control(x,dx,a,da,v_target(t))
 		x,dx,a,da = get_next_state(x,dx,a,da,u,tau)
 		
 		if abs(a) > 0.5: break
 
-	T = [ t for (t,_,_,_) in log]
-	X = [ dx for (_,dx,_,_) in log]
-	A = [ a for (_,_,a,_) in log]
-	U = [ u for (_,_,_,u) in log]
+	[T,X,A,U] = zip(*log)
 	
 	# Two subplots, the axes array is 1-d
 	plt.figure(1)
 	plt.title('simulation results')
 	plt.subplot(311)
 	plt.ylabel('robot velocity')
-	plt.plot(T, X, 'k')
+	plt.plot(T,X,'k')
 
 	plt.subplot(312)
 	plt.ylabel('robot inclination')
-	plt.plot(T, A, 'r--')
+	plt.plot(T,A,'r--')
 
 	plt.subplot(313)
 	plt.ylabel('robot control')
@@ -78,6 +75,12 @@ def run(time_out=1.):
 
 	plt.show()
 	
+
+
+def v_target(t):
+	if t < 1: return 1.
+	elif t < 3: return 2.
+	else: return 0.
 
 
 
