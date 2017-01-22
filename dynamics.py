@@ -21,8 +21,10 @@ where:
 """
 from math import exp, sqrt
 import control
+import rl
 from matplotlib import pyplot as plt
 import sys, random
+import cPickle
 
 
 g = 9.81
@@ -38,6 +40,7 @@ K = 5.  # can be estimated from maximal motor speed
 
 def run(time_out=3., epochs=1):
 	tau = 0.01
+	Q,f = get_q_tab()
 
 	for ep in range(epochs): 
 		if ep%100 == 0: print "epoch:",ep
@@ -46,23 +49,29 @@ def run(time_out=3., epochs=1):
 		x = 0.
 		dx = random.uniform(0., 3.,)
 		a = random.gauss(0., 0.1)
-		v_target = random.choice([0.,1.,2.,3.])
 		da = 0.
-
+		v_target = random.choice([0.,1.,2.,3.])
+		
 		t = 0.
 		log = []
-
+		state = rl.get_state(dx,a,da,v_target)
+			
 		while t < time_out:
 			t += tau
 
-			u = control.control(x,dx,a,da,v_target)
+			u,val = rl.get_policy_val(state,Q)
 			x,dx,a,da = get_next_values(x,dx,a,da,u,tau)
+			next_state = rl.get_state(dx,a,da,v_target)
+			reward = rl.get_reward(state,next_state,u)
+			rl.learn(state,u,next_state,Q)
+			state = next_state
+
 			log.append((t,dx,a,u))
 			
 			if abs(a) > 0.7: break
 
 	show(log)
-
+	save_q_tab(Q,f)
 
 
 
@@ -101,6 +110,19 @@ def get_next_values(x,dx,a,da,u,tau):
 	a1 = a + da1*tau 
 
 	return (x1, dx1, a1, da1)
+
+
+def get_q_tab(): 
+	f = open('q_tab.dat')
+	return cPickle.load(f),f
+
+
+
+def save_q_tab(f):
+	f.close()
+	f = open('q_tab.dat','w')
+	cPickle.dump(Q,f)
+
 
 
 
