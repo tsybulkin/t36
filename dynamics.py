@@ -22,6 +22,8 @@ where:
 from math import exp, sqrt
 import control
 from matplotlib import pyplot as plt
+import sys, random
+
 
 g = 9.81
 mb = 15.
@@ -34,28 +36,37 @@ f = 2.
 K = 5.  # can be estimated from maximal motor speed
 
 
-def run(time_out=1.):
+def run(time_out=3., epochs=1):
 	tau = 0.01
 
-	## initial conditions
-	x = 0.
-	dx = 1.0
-	a = -0.0525
-	da = 0.
+	for ep in range(epochs): 
+		if ep%100 == 0: print "epoch:",ep
 
-	t = 0.
-	u = 0.
-	log = []
+		## initial conditions
+		x = 0.
+		dx = random.uniform(0., 3.,)
+		a = random.gauss(0., 0.1)
+		v_target = random.choice([0.,1.,2.,3.])
+		da = 0.
 
-	while t < time_out:
-		log.append((t,dx,a,u))
-		t += tau
+		t = 0.
+		log = []
 
-		u = control.control(x,dx,a,da,v_target(t))
-		x,dx,a,da = get_next_state(x,dx,a,da,u,tau)
-		
-		if abs(a) > 0.5: break
+		while t < time_out:
+			t += tau
 
+			u = control.control(x,dx,a,da,v_target)
+			x,dx,a,da = get_next_values(x,dx,a,da,u,tau)
+			log.append((t,dx,a,u))
+			
+			if abs(a) > 0.7: break
+
+	show(log)
+
+
+
+
+def show(log):
 	[T,X,A,U] = zip(*log)
 	
 	# Two subplots, the axes array is 1-d
@@ -77,14 +88,9 @@ def run(time_out=1.):
 	
 
 
-def v_target(t):
-	if t < 1: return 1.
-	elif t < 3: return 2.
-	else: return 0.
 
 
-
-def get_next_state(x,dx,a,da,u,tau):
+def get_next_values(x,dx,a,da,u,tau):
 	# K*dx + (mb + mw + Iw/R**2)*d2x - u*f/R = 0
 	C = mb + mw + Iw/R**2
 	dx1 = ( u*f/R + (C/tau - K/2)*dx ) / (C/tau + K/2)
@@ -99,8 +105,22 @@ def get_next_state(x,dx,a,da,u,tau):
 
 
 if __name__ == '__main__':
-	run()
-
-
-
+	args = sys.argv
+	if len(args) == 1: print "\nUSAGE:\n\tpython dynamics.py run [time] OR\n" +\
+				"python dynamics train [N]\n"
+	elif len(args) == 2 and args[1] == 'run': run()
+	elif len(args) == 3 and args[1] == 'run': 
+		t = float(args[2])
+		run(time_out=t)
+	elif len(args) == 2 and args[1] == 'train': train()
+	elif len(args) == 3 and args[1] == 'train': 
+		N = int(args[2])
+		train(epochs=N)
+	else:
+		print "\nUSAGE:\n\tpython dynamics.py run [time] OR\n" +\
+				"python dynamics train [N]\n"
+	
+	
+	
+	
 
