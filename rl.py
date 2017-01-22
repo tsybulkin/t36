@@ -12,7 +12,7 @@ U_MAX = 6
 
 
 def init_Q():
-	return np.zeros((41**4, 2*U_MAX+1))
+	return np.zeros((21**4, 2*U_MAX+1))
 
 
 def get_state(dx,a,da,v_target):
@@ -23,8 +23,8 @@ def get_state(dx,a,da,v_target):
 
 
 def d_state(scale,x): 
-	if x > 0 : return min(20, rd(scale*x))
-	else: return max(-20, rd(scale*x))
+	if x > 0 : return min(10, rd(scale*x))
+	else: return max(-10, rd(scale*x))
 
 
 
@@ -33,7 +33,7 @@ def rd(y): return int(round(y))
 
 
 def state2index((dx,a,da,v)):
-	return (20 + dx)* 41**3 + (20 + a)* 41**2 + (20 + da)* 41 + (20 + v)
+	return (10 + dx)* 21**3 + (10 + a)* 21**2 + (10 + da)* 21 + (10 + v)
 
 
 

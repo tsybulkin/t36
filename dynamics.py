@@ -25,6 +25,7 @@ import rl
 from matplotlib import pyplot as plt
 import sys, random
 import cPickle
+import os.path
 
 
 g = 9.81
@@ -40,7 +41,9 @@ K = 5.  # can be estimated from maximal motor speed
 
 def run(time_out=3., epochs=1):
 	tau = 0.01
-	Q,f = get_q_tab()
+	if os.path.isfile('q_tab.dat'): Q = get_q_tab()
+	else: 
+		Q = rl.init_Q()
 
 	for ep in range(epochs): 
 		if ep%100 == 0: print "epoch:",ep
@@ -71,7 +74,7 @@ def run(time_out=3., epochs=1):
 			if abs(a) > 0.7: break
 
 	show(log)
-	save_q_tab(Q,f)
+	save_q_tab(Q)
 
 
 
@@ -112,16 +115,19 @@ def get_next_values(x,dx,a,da,u,tau):
 	return (x1, dx1, a1, da1)
 
 
+
 def get_q_tab(): 
 	f = open('q_tab.dat')
-	return cPickle.load(f),f
-
-
-
-def save_q_tab(f):
+	Q = cPickle.load(f)
 	f.close()
+	return Q
+
+
+
+def save_q_tab(Q):
 	f = open('q_tab.dat','w')
 	cPickle.dump(Q,f)
+	f.close()
 
 
 
