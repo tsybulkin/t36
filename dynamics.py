@@ -38,16 +38,18 @@ h = 0.1
 Ib = mb*h**2
 f = 1.
 #K = 5.  # can be estimated from maximal motor speed
-K = 0.
+K = 0.5
 C = sqrt(g*h*mb/Ib)
 
 
 def run(time_out=10., epochs=1):
 	random.seed()
 	tau = 0.01
+	"""
 	if os.path.isfile('q_tab.dat'): Q = get_q_tab()
 	else: 
 		Q = rl.init_Q()
+	"""
 
 	for ep in range(epochs): 
 		if ep%1000 == 0: print "episodes:",ep
@@ -71,22 +73,22 @@ def run(time_out=10., epochs=1):
 
 			#u = control(dx,a,da,v_target)
 			#u = rl.get_policy(state,Q)
-			u = min(3,abs(da + 0.2*a*C**2))*sign(da + a*C**2)
+			u = min(3,abs(da + 0.25*a*C**2 - (v_target-dx)*0.9 ))*sign(da + a*C**2)
 			x,dx,a,da = get_next_values(x,dx,a,da,u,tau)
 			log.append((t,dx,a,u))
 			next_state = rl.get_state(dx,a,da,v_target)
 			if abs(a) > 0.7: 
 				reward = -100.
-				Q = rl.learn(state,u,next_state,reward,Q)
+				#Q = rl.learn(state,u,next_state,reward,Q)
 				break
 			else:
 				reward = rl.get_reward(state,next_state,u)
-				Q = rl.learn(state,u,next_state,reward,Q)
+				#Q = rl.learn(state,u,next_state,reward,Q)
 				state = next_state
 							
 	print 'target velosity:', v_target
 	show(log)
-	save_q_tab(Q)
+	#save_q_tab(Q)
 
 
 
