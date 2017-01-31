@@ -20,6 +20,7 @@ where:
 
 """
 from math import exp, sqrt
+from numpy import sign
 import control
 import rl
 from matplotlib import pyplot as plt
@@ -35,11 +36,14 @@ R = 0.16
 Iw = 0.5*mw*R**2  # ~solid disk
 h = 0.1
 Ib = mb*h**2
-f = 2.
-K = 5.  # can be estimated from maximal motor speed
+f = 1.
+#K = 5.  # can be estimated from maximal motor speed
+K = 0.
+C = sqrt(g*h*mb/Ib)
 
 
-def run(time_out=3., epochs=1):
+def run(time_out=10., epochs=1):
+	random.seed()
 	tau = 0.01
 	if os.path.isfile('q_tab.dat'): Q = get_q_tab()
 	else: 
@@ -50,10 +54,12 @@ def run(time_out=3., epochs=1):
 
 		## initial conditions
 		x = 0.
-		dx = random.uniform(0., 3.,)
-		a = random.gauss(0., 0.1)
+		#dx = random.uniform(0., 3.,)
+		dx = 1.
+		#a = random.gauss(0., 0.1)
+		a = 0.136
 		da = 0.
-		v_target = random.choice([0.,1.,2.,3.])
+		v_target = random.choice([0.,2.,3.])
 
 		t = 0.
 		log = []
@@ -63,20 +69,21 @@ def run(time_out=3., epochs=1):
 		while t < time_out:
 			t += tau
 
-			u,val = rl.get_policy_val(state,Q)
-			#print 'u,val:',u,val
+			#u = control(dx,a,da,v_target)
+			#u = rl.get_policy(state,Q)
+			u = min(3,abs(da + 0.2*a*C**2))*sign(da + a*C**2)
 			x,dx,a,da = get_next_values(x,dx,a,da,u,tau)
+			log.append((t,dx,a,u))
 			next_state = rl.get_state(dx,a,da,v_target)
-			if abs(a) > 1.1: 
+			if abs(a) > 0.7: 
 				reward = -100.
-				rl.learn(state,u,next_state,reward,Q)
+				Q = rl.learn(state,u,next_state,reward,Q)
 				break
 			else:
 				reward = rl.get_reward(state,next_state,u)
-				rl.learn(state,u,next_state,reward,Q)
+				Q = rl.learn(state,u,next_state,reward,Q)
 				state = next_state
-				log.append((t,dx,a,u))
-			
+							
 	print 'target velosity:', v_target
 	show(log)
 	save_q_tab(Q)
@@ -91,7 +98,7 @@ def show(log):
 	plt.title('simulation results')
 	plt.subplot(311)
 	plt.ylabel('robot velocity')
-	plt.plot(T,X,'k')
+	plt.plot(T,X,'b-')
 
 	plt.subplot(312)
 	plt.ylabel('robot inclination')
@@ -99,7 +106,7 @@ def show(log):
 
 	plt.subplot(313)
 	plt.ylabel('robot control')
-	plt.plot(T,U,'.b')
+	plt.plot(T,U,'k')
 
 	plt.show()
 	

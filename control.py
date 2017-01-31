@@ -1,6 +1,7 @@
 
 
 
-def control(x,dx,a,da,v): return 0.
+def control(dx,a,da,v): 
+	return 0.
 	
 
