@@ -3,7 +3,7 @@
 #
 import random 
 import numpy as np
-from dynamics import C
+from const import *
 
 
 EPS = 0.2
@@ -12,24 +12,23 @@ GAMMA = 0.97
 
 U_MAX = 3
 dx_MAX = 10
-a_MAX = 20
-da_MAX = 20
+a_MAX = 10
+da_MAX = 10
 v_MAX = 5
 
 
 
 
 def init_Q():
-	return 200 * np.ones((2*dx_MAX+1, 2*a_MAX+1, 2*da_MAX+1,2*v_MAX+1, 2*U_MAX+1))
+	return np.zeros((2*dx_MAX+1, 2*a_MAX+1, 2*da_MAX+1, 2*U_MAX+1))
 
 
-def get_state(dx,a,da,v_target):
+def get_state(dx,a,da):
 	"""returns digitized state
 	"""
 	return ( d_state(3., dx, dx_MAX), 
-			d_state(20., a, a_MAX), 
-			d_state(10., da, da_MAX), 
-			d_state(1., v_target, v_MAX) )
+			d_state(10., a, a_MAX), 
+			d_state(10., da, da_MAX) )
 
 
 
@@ -45,34 +44,33 @@ def rd(y): return int(round(y))
 
 
 def get_policy(state,Q):
-	dx,a,da,v = state
+	dx,a,da = state
 		
-	probs = softmax(Q[dx,a,da,v,:])
+	probs = softmax(Q[dx,a,da,:])
 	u = weighted_choice(probs)
 
 	if u > U_MAX: u = u - U_MAX*2 - 1
-	print "policy:",u
-	return min(U_MAX,np.abs(da + a*C**2))*np.sign(da + a*C**2)
-
+	#print "policy:",u
+	return u
 
 
 def get_reward(state,next_state,u):
-	(dx,a,da,v) = next_state
-	return 3 -0.2*abs(u) -abs(dx-v) -abs(a/20 + da/C/10) # 20 and 10 were scale factors
-
+	(dx,a,da) = next_state
+	#return 3 -0.2*abs(u) -abs(dx-v) -abs(a/20 + da/C/10) # 20 and 10 were scale factors
+	return -0.1*abs(dx)
 
 
 def learn(state,u,next_state,reward,Q): 
-	dx1,a1,da1,v1 = state
-	dx2,a2,da2,v2 = next_state
+	dx1,a1,da1 = state
+	dx2,a2,da2 = next_state
 
-	print "state:",state
-	print "next_state:",next_state
-	Val = np.max(Q[dx2,a2,da2,v2,:])
-	print "Q-value of next state:", Val
-	print "old Q-value of state:", Q[dx1,a1,da1,v1,u]
-	Q[dx1,a1,da1,v1,u] = (1 - L_RATE)*Q[dx1,a1,da1,v1,u] + L_RATE*(reward + GAMMA*Val)
-	print "new Q-values of state:", Q[dx1,a1,da1,v1], "\n"
+	#print "state:",state
+	#print "next_state:",next_state
+	Val = np.max(Q[dx2,a2,da2,:])
+	#print "Q-value of next state:", Val
+	#print "old Q-value of state:", Q[dx1,a1,da1,u]
+	Q[dx1,a1,da1,u] = (1 - L_RATE)*Q[dx1,a1,da1,u] + L_RATE*(reward + GAMMA*Val)
+	#print "new Q-values of state:", Q[dx1,a1,da1], "\n"
 	return Q
 
 
