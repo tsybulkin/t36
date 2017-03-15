@@ -12,7 +12,7 @@ def control(dx,a,da,ia,v):
 	#min(3,abs(da + 0.25*a*C**2 - (v_target-dx)*0.9 ))*sign(da + a*C**2)
 	#u = (2*(a+limit((dx-v)*0.2,0.15))*C**2 + 10*da) * Ib/f #+ (dx-v)
 	u = (1.5*a*C**2 + 15*da) * Ib/f + 70*ia #+ (dx-v)
-	#u = 69.*a + 14.*da + 0.01*ia
+	u = 0.
 	return limit(u,U_MAX)
 	
 

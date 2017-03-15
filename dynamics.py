@@ -10,6 +10,7 @@ The diff equation that governs the robot motion:
 	1) K*dx - L*mb*sin(a)*da**2 + L*mb*cos(a)*d2a + (Iw/(R**2) + mb + mw)*d2x - U*f/R = 0
 	
 	2) -L*g*mb*sin(a) + L*mb*cos(a)*d2x + U*f + (Ibc + L**2*mb)*d2a = 0
+	
 	Ibc - inertia moment w.r.t. center of mass
 	Ibc + L**2*mb = Ib
 
@@ -53,7 +54,8 @@ def run(time_out=10., epochs=1):
 		x = 0.
 		dx = 0.
 		a = random.uniform(-0.1, 0.1)
-		da = random.uniform(-0.1, 0.1)		
+		#da = random.uniform(-0.1, 0.1)		
+		da = 0.
 		ia = 0.
 		
 		t = 0.
@@ -67,6 +69,7 @@ def run(time_out=10., epochs=1):
 			#u = monte.get_policy(state,Q)
 			x,dx,a,da = get_next_values(x,dx,a,da,u,tau)
 			ia += a*tau
+			print "x:",x
 
 			log.append((t,dx,a,v,u))
 			#next_state = monte.get_state(dx,a,da)  #,v_target)
